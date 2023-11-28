@@ -4,7 +4,7 @@ const MiniProfile = () => {
       <img
         className="h-16 rounded-full border p-[2px]"
         src="/images/yevhen.png"
-        alt="user image"
+        alt="user-image"
       />
       <div className="flex-1 ml-4">
         <h2 className="font-bold">kochetovdev</h2>

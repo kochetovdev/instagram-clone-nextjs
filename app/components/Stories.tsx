@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { USERS } from "../_utils/userGenerator";
+import { USERS } from "../_utils/mockDataGenerator";
 import { User } from "../_types";
 import Story from "./Story";
 

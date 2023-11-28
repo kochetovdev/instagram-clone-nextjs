@@ -1,9 +1,10 @@
 import { PostData } from "../_types";
-import { EllipsisHorizontalIcon } from "@heroicons/react/24/solid";
 import {
+  EllipsisHorizontalIcon,
   HeartIcon,
   ChatBubbleOvalLeftEllipsisIcon,
   BookmarkIcon,
+  FaceSmileIcon,
 } from "@heroicons/react/24/outline";
 
 interface Props {
@@ -22,7 +23,9 @@ const Post = ({ post }: Props) => {
         <p className="font-bold flex-1">{post.username}</p>
         <EllipsisHorizontalIcon className="h-5" />
       </div>
+
       <img className="objecr-cover w-full" src={post.img} alt="Post picture" />
+
       <div className="flex justify-between px-4 pt-4">
         <div className="flex space-x-4">
           <HeartIcon className="btn" />
@@ -30,6 +33,18 @@ const Post = ({ post }: Props) => {
         </div>
         <BookmarkIcon className="btn" />
       </div>
+
+      <p className="p-5 truncate">
+        <span className="font-bold mr-2">{post.username}</span>
+        {post.caption}
+      </p>
+
+      <form className="flex items-center p-4">
+        <FaceSmileIcon className="h-7" />
+        <input className="border-none flex-1 focus:ring-0" type="text" placeholder="Enter your comment..." />
+        <button className="text-blue-400 font-bold">Post</button>
+      </form>
+
     </div>
   );
 };

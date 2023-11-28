@@ -1,3 +1,4 @@
+import Posts from "./components/Posts"
 import Stories from "./components/Stories"
 
 const Feed = () => {
@@ -5,6 +6,7 @@ const Feed = () => {
     <article>
     <section>
        <Stories />
+       <Posts />
     </section>
     <section>
       

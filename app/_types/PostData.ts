@@ -1,7 +1,6 @@
 export interface PostData {
-  id: string;
   username: string;
-  userImg: string;
-  img: string;
+  profileImg: string;
+  image: string;
   caption: string;
 }

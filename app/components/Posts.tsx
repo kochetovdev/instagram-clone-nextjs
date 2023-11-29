@@ -1,25 +1,46 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Post from "./Post";
+import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import { db } from "@/firebase";
+import { PostDocument } from "../_types";
 
 const Posts = () => {
-  const posts = [
-    {
-      id: "1",
-      username: "codewithsand",
-      userImg: "/images/yevhen.png",
-      img: "https://images.unsplash.com/photo-1695938887083-31f814779e54?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHw5fHx8ZW58MHx8fHx8",
-      caption: 'Nice picture'
-    },
-    {
-      id: "2",
-      username: "kochetovdev",
-      userImg: "/images/yevhen.png",
-      img: "https://images.unsplash.com/photo-1701077137611-9be394bf62f0?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHw0MHx8fGVufDB8fHx8fA%3D%3D",
-      caption: 'Christamas picture'
-    },
-  ];
-  return <div>{posts.map(post => (
-    <Post key={post.id} post={post} />
-  ))}</div>;
+  const [posts, setPosts] = useState<PostDocument[]>([]);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      query(collection(db, "posts"), orderBy("timeStamp", "desc")),
+      (snapshot) => {
+        setPosts(snapshot.docs.map((doc) => ({ id: doc.id, data: () => doc.data() } as PostDocument)));
+      },
+      (error) => {
+        console.error("Error getting posts: ", error);
+      }
+    );
+
+    return unsubscribe;
+  }, []);
+
+  console.log(posts);
+
+  return (
+    <div>
+      {posts.map((post) => (
+        <Post
+          key={post.id}
+          username={post.data().username}
+          userImg={post.data().profileImg}
+          img={post.data().image}
+          caption={post.data().caption}
+        />
+      ))}
+    </div>
+  );
 };
 
 export default Posts;
+
+
+

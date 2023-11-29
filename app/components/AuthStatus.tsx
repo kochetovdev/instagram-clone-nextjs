@@ -1,14 +1,15 @@
 "use client";
 
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 const AuthStatus = () => {
   const { status, data: session } = useSession();
   return (
-    <>
+    <Link href='/auth/signstatus'>
       {status === "authenticated" && (
         <img
-          src={session!.user!.image || "?"}
+          src={session!.user!.image || undefined}
           alt="user-image"
           className="h-10 rounded-full"
         />
@@ -20,7 +21,7 @@ const AuthStatus = () => {
           className="h-10 rounded-full"
         />
       )}
-    </>
+    </Link>
   );
 };
 

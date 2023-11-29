@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
-const Signin = () => {
+const SignStatus = () => {
   const { status } = useSession();
   return (
     <>
@@ -40,4 +40,4 @@ const Signin = () => {
   );
 };
 
-export default Signin;
+export default SignStatus;

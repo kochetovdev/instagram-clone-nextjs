@@ -1,16 +1,29 @@
 "use client";
 
+import { CameraIcon } from "@heroicons/react/24/outline";
+import {
+  addDoc,
+  collection,
+  doc,
+  serverTimestamp,
+  updateDoc,
+} from "firebase/firestore";
+import { db, storage } from "../../firebase";
+import { ChangeEvent, MutableRefObject, useRef, useState } from "react";
+import Modal from "react-modal";
 import { useRecoilState } from "recoil";
 import { modalState } from "../../atom/modalAtom";
-import Modal from "react-modal";
-import { CameraIcon } from "@heroicons/react/24/outline";
-import { useRef, MutableRefObject, useState, ChangeEvent } from "react";
+import { useSession } from "next-auth/react";
+import { getDownloadURL, ref, uploadString } from "firebase/storage";
 
 const UploadModal = () => {
   const [open, setOpen] = useRecoilState(modalState);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const { data: session } = useSession();
 
   const filePickerRef: MutableRefObject<HTMLInputElement | null> = useRef(null);
+  const captionRef: MutableRefObject<HTMLInputElement | null> = useRef(null);
 
   function addImageToPost(event: ChangeEvent<HTMLInputElement>) {
     const reader = new FileReader();
@@ -28,6 +41,34 @@ const UploadModal = () => {
         console.error("Invalid file type");
       }
     };
+  }
+
+  async function uploadPost() {
+    if (loading) {
+      return;
+    }
+
+    setLoading(true);
+
+    const docRef = await addDoc(collection(db, "posts"), {
+      caption: captionRef.current?.value,
+      username: session?.user?.name,
+      profileImg: session?.user?.image,
+      timeStamp: serverTimestamp(),
+    });
+
+    const imageRef = ref(storage, `posts/${docRef.id}/image`);
+    await uploadString(imageRef, selectedFile as string, "data_url").then(
+      async (snapshot) => {
+        const downLoadUrl = await getDownloadURL(imageRef);
+        await updateDoc(doc(db, "posts", docRef.id), {
+          image: downLoadUrl,
+        });
+      }
+    );
+    setOpen(false);
+    setLoading(false);
+    setSelectedFile(null);
   }
 
   return (
@@ -69,9 +110,11 @@ const UploadModal = () => {
               maxLength={150}
               placeholder="Please enter your caption..."
               className="m-4 border-none text-center w-full focus:ring-0"
+              ref={captionRef}
             />
             <button
-              disabled
+              disabled={!selectedFile || loading}
+              onClick={uploadPost}
               className="w-full bg-red-600 text-white p-2 shadow-md hover:brightness-125 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:hover:brightness-100"
             >
               Upload Post

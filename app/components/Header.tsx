@@ -4,6 +4,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { HomeIcon } from "@heroicons/react/24/solid";
 import Image from "next/image";
+import AuthStatus from "./AuthStatus";
 
 const Header = () => {
   return (
@@ -38,11 +39,7 @@ const Header = () => {
         <div className="flex space-x-4 items-center">
           <HomeIcon className="hidden md:inline-flex h-6 cursor-pointer hover:scale-125 transition-transform duration-200 ease-out" />
           <PlusCircleIcon className="h-6 cursor-pointer hover:scale-125 transition-transform duration-200 ease-out" />
-          <img
-            src="/images/yevhen.png"
-            alt="user-image"
-            className="h-10 rounded-full cursor-pointer"
-          />
+          <AuthStatus />
         </div>
       </div>
     </article>

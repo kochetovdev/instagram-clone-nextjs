@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Post from "./Post";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { db } from "@/firebase";
+import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import { useEffect, useState } from "react";
 import { PostDocument } from "../_types";
+import Post from "./Post";
 
 const Posts = () => {
   const [posts, setPosts] = useState<PostDocument[]>([]);
@@ -21,7 +21,7 @@ const Posts = () => {
     );
 
     return unsubscribe;
-  }, []);
+  }, [db]);
 
   console.log(posts);
 

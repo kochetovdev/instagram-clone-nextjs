@@ -2,15 +2,24 @@
 
 import { db } from "@/firebase";
 import {
-  EllipsisHorizontalIcon,
-  HeartIcon,
-  ChatBubbleOvalLeftEllipsisIcon,
   BookmarkIcon,
+  ChatBubbleOvalLeftEllipsisIcon,
+  EllipsisHorizontalIcon,
   FaceSmileIcon,
+  HeartIcon,
 } from "@heroicons/react/24/outline";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+} from "firebase/firestore";
 import { useSession } from "next-auth/react";
-import { ChangeEvent, MouseEvent, useState } from "react";
+import { ChangeEvent, MouseEvent, useEffect, useState } from "react";
+import { CommentDocument } from "../_types";
+import Moment from "react-moment";
 
 interface Props {
   id: string;
@@ -22,6 +31,8 @@ interface Props {
 
 const Post = ({ username, userImg, img, caption, id }: Props) => {
   const [comment, setComment] = useState("");
+  const [comments, setComments] = useState<CommentDocument[]>([]);
+
   const { data: session } = useSession();
 
   const inputChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -41,6 +52,22 @@ const Post = ({ username, userImg, img, caption, id }: Props) => {
       timestamp: serverTimestamp(),
     });
   };
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      query(
+        collection(db, "posts", id, "comments"),
+        orderBy("timestamp", "desc")
+      ),
+      (snapshot) => {
+        setComments(
+          snapshot.docs.map(
+            (doc) => ({ id: doc.id, data: () => doc.data() } as CommentDocument)
+          )
+        );
+      }
+    );
+  }, [db, id]);
 
   return (
     <div className="bg-white my-7 border rounded-md">
@@ -70,6 +97,20 @@ const Post = ({ username, userImg, img, caption, id }: Props) => {
         <span className="font-bold mr-2">{username}</span>
         {caption}
       </p>
+
+      {comments.length > 0 && (
+        <div className="mx-10 max-h-24 overflow-y-scroll scrollbar-none">
+          {comments.map((comment) => (
+            <div className="flex items-center space-x-2 mb-2" key={comment.id}>
+              <img className="h-7 rounded-full object-cover" src={comment.data().userImage} alt="user-image" />
+              <p className="font-semibold">{comment.data().username}</p>
+              <p className="flex-1 truncate">{comment.data().comment}</p>
+              <Moment fromNow>{(comment.data().timestamp?.toDate())}</Moment>
+
+            </div>
+          ))}
+        </div>
+      )}
 
       {session && (
         <form className="flex items-center p-4">

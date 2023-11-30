@@ -1,5 +1,6 @@
 "use client";
 
+import { db } from "@/firebase";
 import {
   EllipsisHorizontalIcon,
   HeartIcon,
@@ -7,17 +8,40 @@ import {
   BookmarkIcon,
   FaceSmileIcon,
 } from "@heroicons/react/24/outline";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useSession } from "next-auth/react";
+import { ChangeEvent, MouseEvent, useState } from "react";
 
 interface Props {
+  id: string;
   username: string;
   userImg: string;
   img: string;
   caption: string;
 }
 
-const Post = ({ username, userImg, img, caption }: Props) => {
+const Post = ({ username, userImg, img, caption, id }: Props) => {
+  const [comment, setComment] = useState("");
   const { data: session } = useSession();
+
+  const inputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setComment(event.target.value);
+  };
+
+  const sendComment = async (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+
+    const commentToSend = comment;
+    setComment("");
+
+    await addDoc(collection(db, "posts", id, "comments"), {
+      comment: commentToSend,
+      username: session?.user?.name,
+      userImage: session?.user?.image,
+      timestamp: serverTimestamp(),
+    });
+  };
+
   return (
     <div className="bg-white my-7 border rounded-md">
       <div className="flex items-center p-5">
@@ -54,8 +78,17 @@ const Post = ({ username, userImg, img, caption }: Props) => {
             className="border-none flex-1 focus:ring-0"
             type="text"
             placeholder="Enter your comment..."
+            value={comment}
+            onChange={inputChange}
           />
-          <button className="text-blue-400 font-bold">Post</button>
+          <button
+            onClick={sendComment}
+            disabled={!comment.trim()}
+            className="text-blue-400 font-bold disabled:text-blue-200"
+            type="submit"
+          >
+            Post
+          </button>
         </form>
       )}
     </div>

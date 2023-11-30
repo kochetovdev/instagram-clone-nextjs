@@ -8,17 +8,21 @@ import {
   FaceSmileIcon,
   HeartIcon,
 } from "@heroicons/react/24/outline";
+import { HeartIcon as HeartIconFilled } from "@heroicons/react/24/solid";
 import {
   addDoc,
   collection,
+  deleteDoc,
+  doc,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
 } from "firebase/firestore";
 import { useSession } from "next-auth/react";
 import { ChangeEvent, MouseEvent, useEffect, useState } from "react";
-import { CommentDocument } from "../_types";
+import { CommentDocument, LikeDocument } from "../_types";
 import Moment from "react-moment";
 
 interface Props {
@@ -32,6 +36,8 @@ interface Props {
 const Post = ({ username, userImg, img, caption, id }: Props) => {
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState<CommentDocument[]>([]);
+  const [likes, setLikes] = useState<LikeDocument[]>([]);
+  const [hasLiked, setHasLiked] = useState(false);
 
   const { data: session } = useSession();
 
@@ -53,6 +59,20 @@ const Post = ({ username, userImg, img, caption, id }: Props) => {
     });
   };
 
+  const likePost = async () => {
+    const userEmail = session?.user?.email;
+  
+    if (userEmail) {
+      if (hasLiked) {
+        await deleteDoc(doc(db, "posts", id, "likes", userEmail));
+      } else {
+        await setDoc(doc(db, "posts", id, "likes", userEmail), {
+          username: session?.user?.name,
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = onSnapshot(
       query(
@@ -68,6 +88,24 @@ const Post = ({ username, userImg, img, caption, id }: Props) => {
       }
     );
   }, [db, id]);
+
+  useEffect(() => {
+    const userLiked = likes.find((like) => like.id === session?.user?.email);
+    setHasLiked(!!userLiked); // Преобразование в булевое значение
+  }, [likes, session]);
+  
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      collection(db, "posts", id, "likes"),
+      (snapshot) =>
+        setLikes(
+          snapshot.docs.map(
+            (doc) => ({ id: doc.id, data: () => doc.data() } as LikeDocument)
+          )
+        )
+    );
+  }, [db]);
 
   return (
     <div className="bg-white my-7 border rounded-md">
@@ -86,7 +124,15 @@ const Post = ({ username, userImg, img, caption, id }: Props) => {
       {session && (
         <div className="flex justify-between px-4 pt-4">
           <div className="flex space-x-4">
-            <HeartIcon className="btn" />
+            {hasLiked ? (
+              <HeartIconFilled
+                onClick={likePost}
+                className="btn text-red-400"
+              />
+            ) : (
+              <HeartIcon onClick={likePost} className="btn" />
+            )}
+
             <ChatBubbleOvalLeftEllipsisIcon className="btn" />
           </div>
           <BookmarkIcon className="btn" />
@@ -102,11 +148,14 @@ const Post = ({ username, userImg, img, caption, id }: Props) => {
         <div className="mx-10 max-h-24 overflow-y-scroll scrollbar-none">
           {comments.map((comment) => (
             <div className="flex items-center space-x-2 mb-2" key={comment.id}>
-              <img className="h-7 rounded-full object-cover" src={comment.data().userImage} alt="user-image" />
+              <img
+                className="h-7 rounded-full object-cover"
+                src={comment.data().userImage}
+                alt="user-image"
+              />
               <p className="font-semibold">{comment.data().username}</p>
               <p className="flex-1 truncate">{comment.data().comment}</p>
-              <Moment fromNow>{(comment.data().timestamp?.toDate())}</Moment>
-
+              <Moment fromNow>{comment.data().timestamp?.toDate()}</Moment>
             </div>
           ))}
         </div>
